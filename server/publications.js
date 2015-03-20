@@ -21,7 +21,7 @@ Meteor.publish('myTweets', function() {
           followingIds.push(fields.profile.followingIds[0]);
 
           Tweets.find({ userId: fields.profile.followingIds[0] }, { reactive: false }).fetch().forEach(function (tweet) {
-            self.added('tweets', tweet.id, tweet);
+            self.added('tweets', tweet._id, tweet);
           });
 
         // a user was unfollowed
