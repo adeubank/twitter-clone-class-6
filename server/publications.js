@@ -41,14 +41,17 @@ Meteor.publish('myTweets', function() {
           // find the followingIds that were removed
           var removedFollowingIds = _(followingIds).difference(changedUser.profile.followingIds);
 
-          // Send that these were removed from the collection
-          Tweets.find({ userId: { $in: removedFollowingIds } }, { reactive: false }).fetch().forEach(function (tweet) {
-            self.removed('users', tweet.userId);
-            self.removed('tweets', tweet._id);
+          _.each(removedFollowingIds, function (userId) {
+            self.removed('users', userId);
+
+            // Send that these were removed from the collection
+            Tweets.find({ userId: userId }, { reactive: false }).fetch().forEach(function (tweet) {
+              self.removed('tweets', tweet._id);
+            });
           });
 
           // update followingIds to not include the user ids that were removed
-          followingIds = _(changedUser.profile.followingIds).without(followingIds);
+          followingIds = _(changedUser.profile.followingIds).without(removedFollowingIds);
         }
       }
     }
@@ -60,8 +63,6 @@ Meteor.publish('myTweets', function() {
   followingIds.push(user.profile.followingIds);
   followingIds.push(user._id);
   followingIds = _(followingIds).flatten();
-
-
 
   users = Users.find({_id: {$in: followingIds}}, {fields: {emails: 0, services: 0}});
   tweets = Tweets.find({userId: {$in: followingIds}});
